@@ -17,7 +17,7 @@ namespace Курсовой_Проект
     static class Scene
     {
         public static double angleX = -70;
-        public static double angleY = 0;
+        public static double angleZ = 0;
         public static int Z = -150;
 
         //вращение колес
@@ -25,8 +25,8 @@ namespace Курсовой_Проект
 
         //поворот передних колес
         private static double angleFrontWheel = 0;      //поворот колес право/лево
-        private static double maxAngleFrontWheel = 30;  //максимальный поворот
-        private static double angleBack = 4;            //скорость поворота колес в исходное положение
+        private static double maxAngleFrontWheel = 15;  //максимальный поворот
+        private static double angleBack = 2;            //скорость поворота колес в исходное положение
         public static bool keyUp = false;
 
         //перемещение автомобиля
@@ -374,22 +374,20 @@ namespace Курсовой_Проект
 
             Gl.glTranslated(0, 0, Z);
 
-            Gl.glRotated(angleY, 0, 1, 0);
             Gl.glRotated(angleX, 1, 0, 0);
+            Gl.glRotated(angleZ, 0, 0, 1);
 
             Gl.glLightfv(Gl.GL_LIGHT0, Gl.GL_POSITION, new float[] { 500, 500, 500, 1});
 
             for (int i = 0; i < objectsInfo.Count; i++)
             {
-                Gl.glEnable(Gl.GL_TEXTURE_2D);
-
                 int j = 0;
                 foreach (int obj in objectsInfo[i].ObjectsId)
                 {
                     //перемещение автомобиля
                     if (i > 0) {
-                        Gl.glRotated(angle, 0, 1, 0);
-                        Gl.glTranslated(translateVector.X, 0, translateVector.Y);
+                        Gl.glRotated(angle, 0, 0, 1);
+                        Gl.glTranslated(translateVector.X, translateVector.Y, 0);
                     }
 
                     //вращение колес
@@ -412,7 +410,7 @@ namespace Курсовой_Проект
                     {
                         for (int k = 0; k < 1; k++)
                         {
-                            Gl.glActiveTextureARB(Gl.GL_TEXTURE0 + k);
+                            //Gl.glActiveTextureARB(Gl.GL_TEXTURE0 + k);
                             Gl.glBindTexture(Gl.GL_TEXTURE_2D, objectsInfo[i].Textures[objectsInfo[i].Objects[j].TextureId].TextureId[k]);
                             Gl.glEnable(Gl.GL_TEXTURE_2D);
                         }
@@ -421,7 +419,7 @@ namespace Курсовой_Проект
 
                         for (int k = 0; k < 1; k++)
                         {
-                            Gl.glActiveTextureARB(Gl.GL_TEXTURE0 + k);
+                            //Gl.glActiveTextureARB(Gl.GL_TEXTURE0 + k);
                             Gl.glBindTexture(Gl.GL_TEXTURE_2D, 0);
                             Gl.glDisable(Gl.GL_TEXTURE_2D);
                         }
@@ -447,17 +445,12 @@ namespace Курсовой_Проект
                     //вернуть перемещение
                     if (i > 0)
                     {
-                        Gl.glTranslated(-translateVector.X, 0, -translateVector.Y);
-                        Gl.glRotated(-angle, 0, 1, 0);
+                        Gl.glTranslated(-translateVector.X, -translateVector.Y, 0);
+                        Gl.glRotated(-angle, 0, 0, 1);
                     }
 
                     j++;
                 }
-                if (i == 0)
-                {
-                    Gl.glRotated(90, 1, 0, 0);
-                }
-                Gl.glDisable(Gl.GL_TEXTURE);
             }
 
             Gl.glPopMatrix();
@@ -466,7 +459,7 @@ namespace Курсовой_Проект
 
             ////////////
             //добавить скорость, применить сопротивление
-            TranslateVector = TranslateVector.Add(directionVector.Multiply(carSpeed));
+            TranslateVector = TranslateVector.Subtract(directionVector.Multiply(carSpeed));
 
             if (carSpeed + reaction > 0)
                 carSpeed += reaction;

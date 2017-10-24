@@ -20,6 +20,8 @@ namespace Курсовой_Проект
         public Point lastPoint;
         public Console console;
 
+        public bool[] keysDown = { false, false, false, false };
+
         public Form1()
         {
             InitializeComponent();
@@ -35,13 +37,13 @@ namespace Курсовой_Проект
             Scene.LoadAse("Objects\\mustang_GT.ase");     //загрузить объект
 
             //пол
-            Scene.Rectangle("land", new double[] { 4000, 0, 4000 }, new double[] { 4000, 0, -4000 }, new double[] { -4000, 0, -4000 }, new double[] { -4000, 0, 4000 }, 
-                            new List<double[]> { new double[] { 10, 10, 0 }, new double[] { 10, -10, 0 }, new double[] { -10, -10, 0 }, new double[] { -10, 10, 0 } }, new Texture(new List<string> { "Textures\\no-translate-detected_318-30285.jpg" }));
+            Scene.Rectangle("land", new double[] { 4000, 4000, 0 }, new double[] { 4000, -4000, 0 }, new double[] { -4000, -4000, 0 }, new double[] { -4000, 4000, 0 }, 
+                            new List<double[]> { new double[] { 10, 10, 0 }, new double[] { 10, -10, 0 }, new double[] { -10, -10, 0 }, new double[] { -10, 10, 0 } }, new Texture(new List<string> { "Textures\\checkers.jpg" }));
             //стены
-            Scene.Rectangle("wall1", new double[] { 4000, 500, 4000 }, new double[] { 4000, 500, -4000 }, new double[] { 4000, 0, -4000 }, new double[] { 4000, 0, 4000 });
-            Scene.Rectangle("wall2", new double[] { 4000, 500, -4000 }, new double[] { -4000, 500, -4000 }, new double[] { -4000, 0, -4000 }, new double[] { 4000, 0, -4000 });
-            Scene.Rectangle("wall3", new double[] { -4000, 500, -4000 }, new double[] { -4000, 500, 4000 }, new double[] { -4000, 0, 4000 }, new double[] { -4000, 0, -4000 });
-            Scene.Rectangle("wall4", new double[] { -4000, 500, 4000 }, new double[] { 4000, 500, 4000 }, new double[] { 4000, 0, 4000 }, new double[] { -4000, 0, 4000 });
+            Scene.Rectangle("wall1", new double[] { 4000, 4000, 500 }, new double[] { 4000, -4000, 500 }, new double[] { 4000, -4000, 0 }, new double[] { 4000, 4000, 0 });
+            Scene.Rectangle("wall2", new double[] { 4000, -4000, 500 }, new double[] { -4000, -4000, 500 }, new double[] { -4000, -4000, 0 }, new double[] { 4000, -4000, 0 });
+            Scene.Rectangle("wall3", new double[] { -4000, -4000, 500 }, new double[] { -4000, 4000, 500 }, new double[] { -4000, 4000, 0 }, new double[] { -4000, -4000, 0 });
+            Scene.Rectangle("wall4", new double[] { -4000, 4000, 500 }, new double[] { 4000, 4000, 500 }, new double[] { 4000, 4000, 0 }, new double[] { -4000, 4000, 0 });
 
             //событие на движение колесика мышки
             this.MouseWheel += new MouseEventHandler(this.Form1_Wheel);
@@ -73,7 +75,7 @@ namespace Курсовой_Проект
         private void AnT_MouseMove(object sender, MouseEventArgs e)
         {
             if (click) {
-                Scene.angleY += (double)(e.Location.X - lastPoint.X) / 5;
+                Scene.angleZ += (double)(e.Location.X - lastPoint.X) / 5;
                 Scene.angleX += (double)(e.Location.Y - lastPoint.Y) / 5;
 
                 lastPoint = e.Location;
@@ -86,27 +88,31 @@ namespace Курсовой_Проект
 
         private void AnT_KeyDown(object sender, KeyEventArgs e)
         {
-            switch (e.KeyData)
-            {
-                case Keys.W:
-                    Scene.CarSpeed += 0.5;
-                    break;
-                case Keys.S:
-                    Scene.CarSpeed -= 0.5;
-                    break;
-                case Keys.A:
-                    Scene.keyUp = true;
-                    Scene.AngleFrontWheel -= 3;
-                    break;
-                case Keys.D:
-                    Scene.keyUp = true;
-                    Scene.AngleFrontWheel += 3;
-                    break;
-            }
+            if (e.KeyData == Keys.W)
+                keysDown[0] = true;
+            if (e.KeyData == Keys.S)
+                keysDown[1] = true;
+            if (e.KeyData == Keys.A)
+                keysDown[2] = true;
+            if (e.KeyData == Keys.D)
+                keysDown[3] = true;
         }
         private void AnT_KeyUp(object sender, KeyEventArgs e)
         {
-            Scene.keyUp = false;
+            if (e.KeyData == Keys.W)
+                keysDown[0] = false;
+            if (e.KeyData == Keys.S)
+                keysDown[1] = false;
+            if (e.KeyData == Keys.A)
+            {
+                Scene.keyUp = false;
+                keysDown[2] = false;
+            }
+            if (e.KeyData == Keys.D)
+            {
+                Scene.keyUp = false;
+                keysDown[3] = false;
+            }
         }
 
         private void timer1_Tick(object sender, EventArgs e)
@@ -117,8 +123,20 @@ namespace Курсовой_Проект
 
             AnT.Invalidate();
 
-            //textBox1.AppendText(Scene.SpeedAngleWheel + "\r\n");
-            //console.textBox1.AppendText(Scene.translateVector.X + " " + Scene.translateVector.Y + "\r\n");
+            if(keysDown[0])
+                Scene.CarSpeed += 0.5;
+            if (keysDown[1])
+                Scene.CarSpeed -= 0.5;
+
+            if (keysDown[2]) {
+                Scene.keyUp = true;
+                Scene.AngleFrontWheel -= 1;
+            }
+            if (keysDown[3])
+            {
+                Scene.keyUp = true;
+                Scene.AngleFrontWheel += 1;
+            }
         }
     }
 }

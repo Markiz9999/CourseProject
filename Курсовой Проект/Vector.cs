@@ -55,7 +55,7 @@ namespace Курсовой_Проект
         }
         //поворот вектора на угол
         public Vector Rotate(double angle) {
-            return new Vector(X * Math.Cos(angle) - Y * Math.Sin(angle), Y * Math.Cos(angle) + X * Math.Sin(angle));
+            return new Vector(X * Math.Cos(angle) + Y * Math.Sin(angle), Y * Math.Cos(angle) - X * Math.Sin(angle));
         }
         //умножить вектор на число
         public Vector Multiply(double a) {
