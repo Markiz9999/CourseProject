@@ -34,25 +34,32 @@ namespace Курсовой_Проект
             AnT.Size = new Size(Width, Height);
             OpenGl.ReSizeGLScene(AnT, Width, Height);
 
-            Scene.LoadAse("Objects\\mustang_GT.ase");     //загрузить объект
-
-            //пол
-            Scene.Rectangle("land", new double[] { 4000, 4000, 0 }, new double[] { 4000, -4000, 0 }, new double[] { -4000, -4000, 0 }, new double[] { -4000, 4000, 0 }, 
-                            new List<double[]> { new double[] { 10, 10, 0 }, new double[] { 10, -10, 0 }, new double[] { -10, -10, 0 }, new double[] { -10, 10, 0 } }, new Texture(new List<string> { "Textures\\checkers.jpg" }));
-            //стены
-            Scene.Rectangle("wall1", new double[] { 4000, 4000, 500 }, new double[] { 4000, -4000, 500 }, new double[] { 4000, -4000, 0 }, new double[] { 4000, 4000, 0 });
-            Scene.Rectangle("wall2", new double[] { 4000, -4000, 500 }, new double[] { -4000, -4000, 500 }, new double[] { -4000, -4000, 0 }, new double[] { 4000, -4000, 0 });
-            Scene.Rectangle("wall3", new double[] { -4000, -4000, 500 }, new double[] { -4000, 4000, 500 }, new double[] { -4000, 4000, 0 }, new double[] { -4000, -4000, 0 });
-            Scene.Rectangle("wall4", new double[] { -4000, 4000, 500 }, new double[] { 4000, 4000, 500 }, new double[] { 4000, 4000, 0 }, new double[] { -4000, 4000, 0 });
-
             //событие на движение колесика мышки
             this.MouseWheel += new MouseEventHandler(this.Form1_Wheel);
-
-            timer1.Enabled = true;
         }
 
         private void Form1_Load(object sender, EventArgs e)
-        {     
+        {
+            Scene.LoadAse("Objects\\mustang_GT.ase");     //загрузить объект
+            Scene.LoadAse("Objects\\Circle_and_Trees.ase");
+            
+            //пол
+            Scene.Rectangle("land", new double[] { 4000, 4000, -1 }, new double[] { 4000, -4000, -1 }, new double[] { -4000, -4000, -1 }, new double[] { -4000, 4000, -1 },
+                            new List<double[]> { new double[] { 10, 10, 0 }, new double[] { 10, -10, 0 }, new double[] { -10, -10, 0 }, new double[] { -10, 10, 0 } },
+                            new Texture("Textures\\grass.jpg", "Standard", new float[] { 1, 1, 1, }, new List<Texture>()));
+            //стены
+            Scene.Rectangle("wall1", new double[] { 4000, 4000, 1200 }, new double[] { 4000, -4000, 1200 }, new double[] { 4000, -4000, -1 }, new double[] { 4000, 4000, -1 },
+                            new List<double[]> { new double[] { -2.5, 1, 0 }, new double[] { 2.5, 1, 0 }, new double[] { 2.5, 0, 0 }, new double[] { -2.5, 0, 0 } },
+                            new Texture("Textures\\house.jpg", "Standard", new float[] { 1, 1, 1, }, new List<Texture>()));
+            Scene.Rectangle("wall2", new double[] { 4000, -4000, 1200 }, new double[] { -4000, -4000, 1200 }, new double[] { -4000, -4000, -1 }, new double[] { 4000, -4000, -1 },
+                            new List<double[]> { new double[] { -2.5, 1, 0 }, new double[] { 2.5, 1, 0 }, new double[] { 2.5, 0, 0 }, new double[] { -2.5, 0, 0 } },
+                            new Texture("Textures\\house.jpg", "Standard", new float[] { 1, 1, 1, }, new List<Texture>()));
+            Scene.Rectangle("wall3", new double[] { -4000, -4000, 1200 }, new double[] { -4000, 4000, 1200 }, new double[] { -4000, 4000, -1 }, new double[] { -4000, -4000, -1 },
+                            new List<double[]> { new double[] { -2.5, 1, 0 }, new double[] { 2.5, 1, 0 }, new double[] { 2.5, 0, 0 }, new double[] { -2.5, 0, 0 } },
+                            new Texture("Textures\\house.jpg", "Standard", new float[] { 1, 1, 1, }, new List<Texture>()));
+            Scene.Rectangle("wall4", new double[] { -4000, 4000, 1200 }, new double[] { 4000, 4000, 1200 }, new double[] { 4000, 4000, -1 }, new double[] { -4000, 4000, -1 },
+                            new List<double[]> { new double[] { -2.5, 1, 0 }, new double[] { 2.5, 1, 0 }, new double[] { 2.5, 0, 0 }, new double[] { -2.5, 0, 0 } },
+                            new Texture("Textures\\house.jpg", "Standard", new float[] { 1, 1, 1, }, new List<Texture>()));
         }
         private void Form1_Resize(object sender, EventArgs e)
         {
@@ -75,8 +82,8 @@ namespace Курсовой_Проект
         private void AnT_MouseMove(object sender, MouseEventArgs e)
         {
             if (click) {
-                Scene.angleZ += (double)(e.Location.X - lastPoint.X) / 5;
-                Scene.angleX += (double)(e.Location.Y - lastPoint.Y) / 5;
+                Scene.AngleZ += (double)(e.Location.X - lastPoint.X) / 5;
+                Scene.AngleX += (double)(e.Location.Y - lastPoint.Y) / 5;
 
                 lastPoint = e.Location;
             }
@@ -96,6 +103,28 @@ namespace Курсовой_Проект
                 keysDown[2] = true;
             if (e.KeyData == Keys.D)
                 keysDown[3] = true;
+
+            if (e.KeyData == Keys.Q)
+            {
+                if (OpenGl.FS)
+                    OpenGl.ScreenMode(this, AnT, false);
+                else
+                    OpenGl.ScreenMode(this, AnT, true);
+            }
+
+            if (e.KeyData == Keys.E)
+            {
+                if (OpenGl.Light)
+                {
+                    OpenGl.Light = false;
+                    Gl.glDisable(Gl.GL_LIGHTING);
+                }
+                else
+                {
+                    OpenGl.Light = true;
+                    Gl.glEnable(Gl.GL_LIGHTING);
+                }
+            }
         }
         private void AnT_KeyUp(object sender, KeyEventArgs e)
         {

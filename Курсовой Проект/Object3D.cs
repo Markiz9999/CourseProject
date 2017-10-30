@@ -8,84 +8,32 @@ namespace Курсовой_Проект
 {
     public class Object3D
     {
-        private string objName;
-        private List<double[]> vertex;
-        private List<int[]> poly;
-        private List<double[]> tVertex;
-        private List<int[]> tPoly;
-        private string objFileType;
-        private int textureId;
-        private double[] position;
+        public string ObjName;                          //имя объекта
+        public List<double[]> Vertex;                   //координаты точек
+        public List<int[]> Poly;                        //полигоны
+        public List<double[]> TVertex;                  //координаты точек для текстур
+        public List<int[]> TPoly;                       //полигоны для текстур
+        public string ObjFileType;                      //тип загружаемого файла (obj | ase - ase в приоритете (obj отключен))
+        public int Material;                            //номер материала для объекта
+        public double[] Position;                       //позиция объекта
+        public List<int> SubMaterial = new List<int>(); //субматериалы для каждого полигона
 
-        public string ObjName {
-            get { return objName; }
-            set {
-                if (objName != String.Empty) {
-                    objName = value;
-                }
-            }
-        }
-        public List<double[]> Vertex {
-            get { return vertex; }
-            set {
-                vertex = value;
-            }
-        }
-        public List<int[]> Poly
-        {
-            get { return poly; }
-            set
-            {
-                poly = value;
-            }
-        }
-        public List<double[]> TVertex
-        {
-            get { return tVertex; }
-            set
-            {
-                tVertex = value;
-            }
-        }
-        public List<int[]> TPoly
-        {
-            get { return tPoly; }
-            set
-            {
-                tPoly = value;
-            }
-        }
-        public string ObjFileType
-        {
-            get { return objFileType; }
-            set
-            {
-                if (objFileType != String.Empty)
-                {
-                    objFileType = value;
-                }
-            }
-        }
-        public double[] Position {
-            get { return position; }
-            set { position = value; }
-        }
+        public double[] Translate = new double[] { 0, 0, 0}; //смещение объекта
 
-        public int TextureId { get { return textureId; } }
-
-        public Object3D(string objName, List<double[]> vertex, List<int[]> poly, List<double[]> tVertex, List<int[]> tPoly, String objFileType, int TextureId) {
+        public Object3D(string objName, List<double[]> vertex, List<int[]> poly, List<int> submaterial, List<double[]> tVertex, List<int[]> tPoly, String objFileType, int material) {
             ObjName = objName;
             Vertex = vertex;
             Poly = poly;
             TVertex = tVertex;
             TPoly = tPoly;
             ObjFileType = objFileType;
-            textureId = TextureId;
+            Material = material;
+            SubMaterial = submaterial;
 
             Position = new double[] { 0, 0, 0};
         }
 
-        public Object3D(string objName, List<double[]> vertex, List<int[]> poly, List<double[]> tVertex, List<int[]> tPoly, String objFileType, int TextureId, double[] position)
+        public Object3D(string objName, List<double[]> vertex, List<int[]> poly, List<int> submaterial, List<double[]> tVertex, List<int[]> tPoly, String objFileType, int material, double[] position)
         {
             ObjName = objName;
             Vertex = vertex;
@@ -93,7 +41,8 @@ namespace Курсовой_Проект
             TVertex = tVertex;
             TPoly = tPoly;
             ObjFileType = objFileType;
-            textureId = TextureId;
+            Material = material;
+            SubMaterial = submaterial;
 
             Position = position;
         }

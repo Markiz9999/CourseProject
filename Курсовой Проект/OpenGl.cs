@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Windows.Forms;
 
 using Tao.OpenGl;
 using Tao.FreeGlut;
@@ -16,25 +17,18 @@ namespace Курсовой_Проект
 {
     static class OpenGl
     {
+        public static bool Light = true;
+        public static bool FS = false;  //включен ли полноэкранный режим
         public static void Init(SimpleOpenGlControl AnT) {
             
-            // инициализация бибилиотеки glut 
-            Glut.glutInit();
-            // инициализация режима экрана 
-            Glut.glutInitDisplayMode(Glut.GLUT_RGBA | Glut.GLUT_DOUBLE | Glut.GLUT_DEPTH);
+            Glut.glutInit();        // инициализация бибилиотеки glut 
+            Glut.glutInitDisplayMode(Glut.GLUT_RGB | Glut.GLUT_DOUBLE | Glut.GLUT_DEPTH);   // инициализация режима экрана
 
-            // инициализация библиотеки openIL
-            //Il.ilInit();
-            //Il.ilEnable(Il.IL_ORIGIN_SET);
-
-            Gl.glClearColor(255, 255, 255, 1);          // установка цвета очистки экрана (RGBA) 
+            Gl.glClearColor(1, 1, 1, 1);                // установка цвета очистки экрана (RGBA) 
             Gl.glViewport(0, 0, AnT.Width, AnT.Height); // установка порта вывода 
             Gl.glMatrixMode(Gl.GL_PROJECTION);          // активация проекционной матрицы
             Gl.glLoadIdentity();                        // очистка матрицы 
-
-            // установка перспективы
-            Glu.gluPerspective(45, (double)AnT.Width / AnT.Height, 1, 10000);
-
+            Glu.gluPerspective(45, (float)AnT.Width / AnT.Height, 1, 500);   // установка перспективы
             Gl.glMatrixMode(Gl.GL_MODELVIEW);           // установка объектно-видовой матрицы 
             Gl.glLoadIdentity();                        // очистка матрицы 
 
@@ -42,28 +36,36 @@ namespace Курсовой_Проект
             Gl.glEnable(Gl.GL_DEPTH_TEST);
             Gl.glEnable(Gl.GL_LIGHTING);
             Gl.glEnable(Gl.GL_LIGHT0);
-
-            float[] diffuse = { 1f, 1f, 1f };
-            float[] position = { 500, 500, 500, 1 };
-
-            Gl.glLightfv(Gl.GL_LIGHT0, Gl.GL_DIFFUSE, diffuse);
-            Gl.glLightfv(Gl.GL_LIGHT0, Gl.GL_POSITION, position);
+            Gl.glEnable(Gl.GL_LIGHT1);
+            Gl.glEnable(Gl.GL_LIGHT2);
+            Gl.glEnable(Gl.GL_LIGHT3);
 
             Gl.glLightModeli(Gl.GL_LIGHT_MODEL_TWO_SIDE, Gl.GL_TRUE);
+            Gl.glLightModelfv(Gl.GL_LIGHT_MODEL_AMBIENT, new float[] { 1.0f, 1.0f, 1.0f, 1.0f });
 
             ////////////////////
-
+            
             //Разрешить плавное цветовое сглаживание; 
             Gl.glShadeModel(Gl.GL_SMOOTH);
-
             // Слегка улучшим вывод перспективы; 
             Gl.glHint(Gl.GL_PERSPECTIVE_CORRECTION_HINT, Gl.GL_NICEST);
-
+              
             // Разрешаем смешивание; 
             Gl.glEnable(Gl.GL_BLEND);
-
             // Устанавливаем тип смешивания; 
             Gl.glBlendFunc(Gl.GL_SRC_ALPHA, Gl.GL_ONE_MINUS_SRC_ALPHA);
+
+            ///////////////////
+            //туман
+
+            Gl.glEnable(Gl.GL_FOG);                                             // Включает туман (GL_FOG)
+            Gl.glFogi(Gl.GL_FOG_MODE, Gl.GL_LINEAR);                            // Выбираем тип тумана
+            Gl.glFogfv(Gl.GL_FOG_COLOR, new float[] { 0.9f, 0.9f, 0.9f});       // Устанавливаем цвет тумана
+            Gl.glFogf(Gl.GL_FOG_DENSITY, 0.07f);                                // Насколько густым будет туман
+            Gl.glHint(Gl.GL_FOG_HINT, Gl.GL_NICEST);                            // Вспомогательная установка тумана
+            Gl.glFogf(Gl.GL_FOG_START, 1.0f);                                   // Глубина, с которой начинается туман
+            Gl.glFogf(Gl.GL_FOG_END, 4000.0f);                                  // Глубина, где туман заканчивается.
+
         }
 
         public static void ReSizeGLScene(SimpleOpenGlControl AnT,int width, int height)
@@ -80,6 +82,35 @@ namespace Курсовой_Проект
 
             Gl.glMatrixMode(Gl.GL_MODELVIEW);           // установка объектно-видовой матрицы 
             Gl.glLoadIdentity();                        // очистка матрицы 
+        }
+
+        public static void ScreenMode(Form1 form, SimpleOpenGlControl AnT, bool fullscreen)
+        {   // Присваиваем значение "глобальной" переменной; 
+            FS = fullscreen;
+            if (FS) {
+                // *** ПОЛНОЭКРАННЫЙ РЕЖИМ *** 
+                // Скрываем рамку окна; 
+                form.FormBorderStyle = FormBorderStyle.None;
+                // Разворачиваем окно; 
+                form.WindowState = FormWindowState.Maximized;
+
+                Cursor.Hide();
+            } else {
+                // *** ОКОННЫЙ РЕЖИМ *** 
+                // Возвращаем состояние окна; 
+                form.WindowState = FormWindowState.Normal;
+                // Показываем масштабируемую рамку окна; 
+                form.FormBorderStyle = FormBorderStyle.FixedSingle;
+
+                Cursor.Show();
+                
+                // Задаем размеры окна; 
+                form.Width = 1280;
+                // Ширина; 
+                form.Height = 720;
+                // Высота; 
+            }
+            ReSizeGLScene(AnT, form.Width, form.Height);
         }
 
         public static int Add_RGB(Bitmap B, Size S)
@@ -102,8 +133,8 @@ namespace Курсовой_Проект
             Gl.glTexParameteri(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MAG_FILTER, Gl.GL_LINEAR);
             Gl.glTexParameteri(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MIN_FILTER, Gl.GL_LINEAR);
             Gl.glTexEnvf(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_MODULATE);
-
-            Gl.glTexImage2D(Gl.GL_TEXTURE_2D, 0, (int)Gl.GL_RGB8, image.Width, image.Height, 0, Gl.GL_BGR_EXT, Gl.GL_UNSIGNED_BYTE, bitmapdata.Scan0);
+          
+            Gl.glTexImage2D(Gl.GL_TEXTURE_2D, 0, Gl.GL_RGBA, image.Width, image.Height, 0, Gl.GL_BGR_EXT, Gl.GL_UNSIGNED_BYTE, bitmapdata.Scan0);
 
             return texObject;
         }
@@ -153,9 +184,6 @@ namespace Курсовой_Проект
             return 0;
         }
 
-        /// <summary>
-        /// This function load an uncompressed TGA
-        /// </summary>
         static int LoadUncompressedTGA(FileStream file, string name)
         {
             TextureImage texture;

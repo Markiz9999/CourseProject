@@ -17,26 +17,29 @@ namespace Курсовой_Проект
 {
     class Texture
     {
+        public string MaterialClass = "";
+        public int TextureId = 0;
+        public float[] MaterialDiffuse;
+        public List<Texture> SubMaterial = new List<Texture>();
 
-        private List<int> textureId = new List<int>();
+        public Texture(string path, string materialClass, float[] materialDiffuse, List<Texture> subMaterial)
+        {
+            MaterialClass = materialClass;
+            MaterialDiffuse = materialDiffuse;
+            SubMaterial = subMaterial;
 
-        public List<int> TextureId { get { return textureId; } }
-
-        public Texture(List<string> Paths) {
-            foreach (string Path in Paths)
+            if (File.Exists(path))
             {
-                if (File.Exists(Path))
-                {
-                    string[] str = Path.Split('.');
+                string[] str = path.Split('.');
 
-                    if (str[str.Length - 1] == "tga")
-                    {
-                        textureId.Add(OpenGl.LoadTGA(Path));
-                    }
-                    else {
-                        Bitmap bitmap = new Bitmap(Path);
-                        textureId.Add(OpenGl.Add_RGB(bitmap, new Size(bitmap.Width, bitmap.Height)));
-                    }
+                if (str[str.Length - 1] == "tga")
+                {
+                    TextureId = OpenGl.LoadTGA(path);
+                }
+                else
+                {
+                    Bitmap bitmap = new Bitmap(path);
+                    TextureId = OpenGl.Add_RGB(bitmap, new Size(bitmap.Width, bitmap.Height));
                 }
             }
         }
