@@ -22,7 +22,7 @@ namespace Курсовой_Проект
         public static void Init(SimpleOpenGlControl AnT) {
             
             Glut.glutInit();        // инициализация бибилиотеки glut 
-            Glut.glutInitDisplayMode(Glut.GLUT_RGB | Glut.GLUT_DOUBLE | Glut.GLUT_DEPTH);   // инициализация режима экрана
+            Glut.glutInitDisplayMode(Glut.GLUT_RGBA | Glut.GLUT_DOUBLE | Glut.GLUT_DEPTH);   // инициализация режима экрана
 
             Gl.glClearColor(1, 1, 1, 1);                // установка цвета очистки экрана (RGBA) 
             Gl.glViewport(0, 0, AnT.Width, AnT.Height); // установка порта вывода 
@@ -55,16 +55,19 @@ namespace Курсовой_Проект
             // Устанавливаем тип смешивания; 
             Gl.glBlendFunc(Gl.GL_SRC_ALPHA, Gl.GL_ONE_MINUS_SRC_ALPHA);
 
+            //вклюючить текстурирование
+            Gl.glEnable(Gl.GL_TEXTURE_2D);
+
             ///////////////////
             //туман
 
             Gl.glEnable(Gl.GL_FOG);                                             // Включает туман (GL_FOG)
             Gl.glFogi(Gl.GL_FOG_MODE, Gl.GL_LINEAR);                            // Выбираем тип тумана
             Gl.glFogfv(Gl.GL_FOG_COLOR, new float[] { 0.9f, 0.9f, 0.9f});       // Устанавливаем цвет тумана
-            Gl.glFogf(Gl.GL_FOG_DENSITY, 0.07f);                                // Насколько густым будет туман
+            Gl.glFogf(Gl.GL_FOG_DENSITY, 0.05f);                                // Насколько густым будет туман
             Gl.glHint(Gl.GL_FOG_HINT, Gl.GL_NICEST);                            // Вспомогательная установка тумана
-            Gl.glFogf(Gl.GL_FOG_START, 1.0f);                                   // Глубина, с которой начинается туман
-            Gl.glFogf(Gl.GL_FOG_END, 4000.0f);                                  // Глубина, где туман заканчивается.
+            Gl.glFogf(Gl.GL_FOG_START, 0.0f);                                   // Глубина, с которой начинается туман
+            Gl.glFogf(Gl.GL_FOG_END, 4000.0f);                                   // Глубина, где туман заканчивается.
 
         }
 
@@ -100,7 +103,7 @@ namespace Курсовой_Проект
                 // Возвращаем состояние окна; 
                 form.WindowState = FormWindowState.Normal;
                 // Показываем масштабируемую рамку окна; 
-                form.FormBorderStyle = FormBorderStyle.FixedSingle;
+                form.FormBorderStyle = FormBorderStyle.Sizable;
 
                 Cursor.Show();
                 
@@ -171,7 +174,7 @@ namespace Курсовой_Проект
         {
             byte[] uTGACompare = { 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0 };    // Uncompressed TGA Header
             byte[] cTGACompare = { 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0 };   // Compressed TGA Header
-            byte[] TGACompare = new byte[12];   // Used To Compare TGA Header
+            byte[] TGACompare = new byte[12];                               // Used To Compare TGA Header
 
             FileStream file = new FileStream(filename, FileMode.Open, FileAccess.Read); // Open The TGA File
             file.Read(TGACompare, 0, 12);
@@ -245,12 +248,6 @@ namespace Курсовой_Проект
                 type = Gl.GL_RGB;   // If So Set The 'type' To GL_RGB
             }
 
-            //if the texture is intended to be rendered anisotropically
-            //if (ContentManager.IsAnisotropic(name) && maximumAnisotropy != 0)
-            //{
-            //    Gl.glTexParameterf(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MAX_ANISOTROPY_EXT, maximumAnisotropy);  // anisotropic Filtered
-            //}
-
             // устанавливаем режим фильтрации и повторения текстуры
             Gl.glTexParameteri(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_WRAP_S, Gl.GL_REPEAT);
             Gl.glTexParameteri(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_WRAP_T, Gl.GL_REPEAT);
@@ -259,7 +256,6 @@ namespace Курсовой_Проект
             Gl.glTexEnvf(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_MODULATE);
 
             Glu.gluBuild2DMipmaps(Gl.GL_TEXTURE_2D, 4, texture.width, texture.height, Gl.GL_RGBA, Gl.GL_UNSIGNED_BYTE, texture.imageData);
-
 
             texture.texID = textureArray[0];
             return texture.texID;

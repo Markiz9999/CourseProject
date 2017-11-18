@@ -20,12 +20,14 @@ namespace Курсовой_Проект
         public string MaterialClass = "";
         public int TextureId = 0;
         public float[] MaterialDiffuse;
+        public float MaterialTransparency;
         public List<Texture> SubMaterial = new List<Texture>();
 
-        public Texture(string path, string materialClass, float[] materialDiffuse, List<Texture> subMaterial)
+        public Texture(string path, string materialClass, float[] materialDiffuse, float materialTransparency, List<Texture> subMaterial)
         {
             MaterialClass = materialClass;
             MaterialDiffuse = materialDiffuse;
+            MaterialTransparency = materialTransparency;
             SubMaterial = subMaterial;
 
             if (File.Exists(path))

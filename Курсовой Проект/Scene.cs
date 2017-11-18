@@ -16,9 +16,8 @@ namespace Курсовой_Проект
 {
     static class Scene
     {
-        public static double angleX = -70;
-        public static double angleZ = 0;
-        public static int Z = -150;
+        //список всех объектов в сцене
+        public static List<FileWithObjects> objectsInfo = new List<FileWithObjects>();
 
         //вращение колес
         private static double angleWheel = 0;           //угол поворота колеса
@@ -26,8 +25,11 @@ namespace Курсовой_Проект
         //поворот передних колес
         private static double angleFrontWheel = 0;      //поворот колес право/лево
         private static double maxAngleFrontWheel = 15;  //максимальный поворот
-        private static double angleBack = 2;            //скорость поворота колес в исходное положение
+        private static double angleBack = 1;            //скорость поворота колес в исходное положение
         public static bool keyUp = false;
+
+        //поворот руля
+        private static double angleHelm = 0;            //угол поворота руля
 
         //перемещение автомобиля
         public static Vector translateVector = new Vector(0, 0);    //координаты автомобиля
@@ -35,7 +37,7 @@ namespace Курсовой_Проект
         public static double maxVectorLength = 1950;                //максимальная длина вектора перемещения
         public static double angle = 0;                             //угол поворота автомобиля
         public static double carSpeed = 0;                          //скорость автомобиля
-        private static double reaction = -0.3;                      //сопротивление
+        private static double reaction = -0.1;                      //сопротивление
         private static double maxSpeed = 15;                        //максимальная скорость
         private static double minSpeed = -7;                        //миниимальная скорость
         ///
@@ -55,8 +57,9 @@ namespace Курсовой_Проект
         public static double AngleFrontWheel {
             get { return angleFrontWheel; }
             set {
-                if (value < maxAngleFrontWheel && value > -maxAngleFrontWheel)
+                if (value < maxAngleFrontWheel && value > -maxAngleFrontWheel) {
                     angleFrontWheel = value;
+                }
                 else {
                     if (value > 0)
                     {
@@ -66,6 +69,7 @@ namespace Курсовой_Проект
                         angleFrontWheel = -maxAngleFrontWheel;
                     }
                 }
+                angleHelm = AngleFrontWheel * 20;
             }
         }
         ///
@@ -113,66 +117,8 @@ namespace Курсовой_Проект
             }
         }
         /// 
-        public static double AngleX {
-            get { return angleX; }
-            set {
-                if (value >= -85 && value < 0)
-                    angleX = value % 360;
-                else if (value < -85)
-                    angleX = -85;
-                else
-                    angleX = 0;
-            }
-        }
-        public static double AngleZ
-        {
-            get { return angleZ; }
-            set
-            {
-                angleZ = value % 360;
-            }
-        }
-        /// 
 
-        public static List<FileWithObjects> objectsInfo = new List<FileWithObjects>();
-        /*
-        public static void LoadObj(string fileName)
-        {
-            string[] allRows = File.ReadAllLines(fileName);
-
-            string objName = "none";
-            List<double[]> vertex = new List<double[]>();
-            List<int[]> poly = new List<int[]>();
-
-            for (int i = 0; i < allRows.Length; i++)
-            {
-                if (allRows[i] == String.Empty || allRows[i][0] == '#')
-                    continue;
-
-                switch (allRows[i][0])
-                {
-                    case 'v':
-                        switch (allRows[i][1])
-                        {
-                            case ' ':
-                                string[] str1 = allRows[i].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                                vertex.Add(new Double[] { Convert.ToDouble(str1[1].Replace('.', ',')), Convert.ToDouble(str1[2].Replace('.', ',')), Convert.ToDouble(str1[3].Replace('.', ',')) });
-                                break;
-                            default:
-                                break;
-                        }
-                        break;
-                    case 'f':
-                        string[] str = allRows[i].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                        poly.Add(new int[] { Convert.ToInt32(str[1].Split('/')[0]), Convert.ToInt32(str[2].Split('/')[0]), Convert.ToInt32(str[3].Split('/')[0]) });
-                        break;
-                    default:
-                        break;
-                }
-            }
-            objectsInfo.Add(new Object3D(objName, vertex, poly, ".obj"));
-        }
-        */
+        //загрузка объекта из файла ASE
         public static void LoadAse(string fileName)
         {
             string[] allRows = File.ReadAllText(fileName).Split(new char[] { '*', '\r', '\n'}, StringSplitOptions.RemoveEmptyEntries);
@@ -250,8 +196,7 @@ namespace Курсовой_Проект
 
                         if (brackets == 0)
                         {
-
-                            objects.Add(new Object3D(objName, vertex, poly, subMaterial, tVertex, tPoly, ".ase", material, position));
+                            objects.Add(new Object3D(objName, vertex, poly, subMaterial, tVertex, tPoly, material, position));
                             break;
                         }
                     }
@@ -266,7 +211,7 @@ namespace Курсовой_Проект
 
             objectsInfo.Add(new FileWithObjects(objects, objectsId, textures));
         }
-
+        //загрузка материала из файла ASE (управление передается из ф-ции LoadAse)
         private static Texture LoadMaterial(ref int i, string fileName, string[] allRows) {
 
             string firstWord;
@@ -276,6 +221,7 @@ namespace Курсовой_Проект
             string path = "";
             string materialClass = "";
             float[] materialDiffuse = new float[] { 1, 1, 1 };  //цвет материала
+            float materialTransparency = 0;                     //прозрачность материала
             List<Texture> subMaterial = new List<Texture>();    //подцвета материала
 
             for (i++; i < allRows.Length; i++)
@@ -303,6 +249,10 @@ namespace Курсовой_Проект
                         strBuff = allRows[i].Split(new Char[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
                         materialDiffuse = new float[] { (float)Convert.ToDouble(strBuff[1].Replace('.', ',')), (float)Convert.ToDouble(strBuff[2].Replace('.', ',')), (float)Convert.ToDouble(strBuff[3].Replace('.', ',')) };
                         break;
+                    case "MATERIAL_TRANSPARENCY":
+                        strBuff = allRows[i].Split(new Char[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                        materialTransparency = (float)Convert.ToDouble(strBuff[1].Replace('.', ','));
+                        break;
                     case "SUBMATERIAL":
                         subMaterial.Add(LoadMaterial(ref i, fileName, allRows));
                         break;
@@ -314,14 +264,53 @@ namespace Курсовой_Проект
 
                 if (brackets == 0)
                 {
-                    return new Texture(path, materialClass, materialDiffuse, subMaterial);
+                    return new Texture(path, materialClass, materialDiffuse, materialTransparency, subMaterial);
                 }
             }
             return null;
         }
 
+        ///создание объекта в памяти на основании считанных данных из файла
         public static int CreateObj(Object3D objects, List<Texture> textures)
         {
+            //отбираем полигоны, у которых одинаковые субматериалы
+            //если нет субматериалов, записываем все точки
+            List<int> subMaterials = new List<int>();
+            List<int>[] polyList = new List<int>[] { new List<int>() };
+            int i = 0;
+
+            if (textures[objects.Material].MaterialClass != "Standard")
+            {
+                var temp = objects.SubMaterial.Distinct();
+
+                foreach (int sub in temp)
+                {
+                    subMaterials.Add(sub);
+                }
+
+                polyList = new List<int>[subMaterials.Count];
+                for (i = 0; i < polyList.Length; i++)
+                {
+                    polyList[i] = new List<int>();
+                }
+
+                for (i = 0; i < objects.Poly.Count; i++)
+                {
+                    for(int j = 0; j < subMaterials.Count; j++){
+                        if(subMaterials[j] == objects.SubMaterial[i])
+                            polyList[j].Add(i);
+                    }
+                }
+            }
+            else {
+                polyList = new List<int>[] { new List<int>() };
+                for (i = 0; i < objects.Poly.Count; i++)
+                {
+                    polyList[0].Add(i);
+                }
+            }
+            //////////////////////////////////////////////////////////////////////////////////////
+
             int nom_l = Gl.glGenLists(1);       // получаем ID для создаваемого дисплейного списка
 
             Gl.glNewList(nom_l, Gl.GL_COMPILE); // генерируем новый дисплейный список
@@ -330,87 +319,101 @@ namespace Курсовой_Проект
 
             Gl.glEnable(Gl.GL_NORMALIZE);
 
-            for (int j = 0; j < objects.Poly.Count; j++)
+            Gl.glBegin(Gl.GL_TRIANGLES);
+
+            i = 0;
+             
+            do
             {
-
-                float x1, y1, z1, x2, y2, z2, x3, y3, z3;
-                float n1, n2, n3;
-                float tx1, ty1, tx2, ty2, tx3, ty3;
-
-                int k = 0;
-
-                //определяем как начато индексирование (obj - с нуля, ase - с единицы)
-                if(objects.ObjFileType == ".obj") k = 1;
-
-                //добавляем в переменные для удобства записи/чтения
-                x1 = (float)objects.Vertex[objects.Poly[j][0] - k][0];
-                y1 = (float)objects.Vertex[objects.Poly[j][0] - k][1];
-                z1 = (float)objects.Vertex[objects.Poly[j][0] - k][2];
-                x2 = (float)objects.Vertex[objects.Poly[j][1] - k][0];
-                y2 = (float)objects.Vertex[objects.Poly[j][1] - k][1];
-                z2 = (float)objects.Vertex[objects.Poly[j][1] - k][2];
-                x3 = (float)objects.Vertex[objects.Poly[j][2] - k][0];
-                y3 = (float)objects.Vertex[objects.Poly[j][2] - k][1];
-                z3 = (float)objects.Vertex[objects.Poly[j][2] - k][2];
-
-                // рассчитываем нормаль 
-                n1 = (y2 - y1) * (z3 - z1) - (y3 - y1) * (z2 - z1);
-                n2 = (z2 - z1) * (x3 - x1) - (z3 - z1) * (x2 - x1);
-                n3 = (x2 - x1) * (y3 - y1) - (x3 - x1) * (y2 - y1);
-
-                Gl.glBegin(Gl.GL_POLYGON);
-
-                Gl.glNormal3f(n1, n2, n3);      // устанавливаем нормаль 
-                
                 if (textures[objects.Material].MaterialClass != "Standard")
                 {
-                    Gl.glColor3fv(textures[objects.Material].SubMaterial[objects.SubMaterial[j]].MaterialDiffuse);
-                    Gl.glLightfv(Gl.GL_LIGHT0, Gl.GL_DIFFUSE, textures[objects.Material].SubMaterial[objects.SubMaterial[j]].MaterialDiffuse);
-                    Gl.glLightfv(Gl.GL_LIGHT1, Gl.GL_DIFFUSE, ArrayMultiply(textures[objects.Material].SubMaterial[objects.SubMaterial[j]].MaterialDiffuse, 0.2f));
-                    Gl.glLightfv(Gl.GL_LIGHT2, Gl.GL_DIFFUSE, ArrayMultiply(textures[objects.Material].SubMaterial[objects.SubMaterial[j]].MaterialDiffuse, 0.2f));
-                    Gl.glLightfv(Gl.GL_LIGHT3, Gl.GL_DIFFUSE, ArrayMultiply(textures[objects.Material].SubMaterial[objects.SubMaterial[j]].MaterialDiffuse, 0.2f));
+                    Gl.glColor4f(textures[objects.Material].SubMaterial[subMaterials[i]].MaterialDiffuse[0],
+                                    textures[objects.Material].SubMaterial[subMaterials[i]].MaterialDiffuse[1],
+                                    textures[objects.Material].SubMaterial[subMaterials[i]].MaterialDiffuse[2],
+                                    1 - textures[objects.Material].SubMaterial[subMaterials[i]].MaterialTransparency);
+                    Gl.glLightfv(Gl.GL_LIGHT0, Gl.GL_DIFFUSE, textures[objects.Material].SubMaterial[subMaterials[i]].MaterialDiffuse);
+                    Gl.glLightfv(Gl.GL_LIGHT1, Gl.GL_DIFFUSE, ArrayMultiply(textures[objects.Material].SubMaterial[subMaterials[i]].MaterialDiffuse, 0.2f));
+                    Gl.glLightfv(Gl.GL_LIGHT2, Gl.GL_DIFFUSE, ArrayMultiply(textures[objects.Material].SubMaterial[subMaterials[i]].MaterialDiffuse, 0.2f));
+                    Gl.glLightfv(Gl.GL_LIGHT3, Gl.GL_DIFFUSE, ArrayMultiply(textures[objects.Material].SubMaterial[subMaterials[i]].MaterialDiffuse, 0.2f));
+
+                    Gl.glBindTexture(Gl.GL_TEXTURE_2D, textures[objects.Material].SubMaterial[subMaterials[i]].TextureId);
                 }
-                else {
-                    Gl.glColor3fv(textures[objects.Material].MaterialDiffuse);
+                else
+                {
+                    Gl.glColor4f(textures[objects.Material].MaterialDiffuse[0],
+                                    textures[objects.Material].MaterialDiffuse[1],
+                                    textures[objects.Material].MaterialDiffuse[2],
+                                    1 - textures[objects.Material].MaterialTransparency);
                     Gl.glLightfv(Gl.GL_LIGHT0, Gl.GL_DIFFUSE, textures[objects.Material].MaterialDiffuse);
                     Gl.glLightfv(Gl.GL_LIGHT1, Gl.GL_DIFFUSE, ArrayMultiply(textures[objects.Material].MaterialDiffuse, 0.2f));
                     Gl.glLightfv(Gl.GL_LIGHT2, Gl.GL_DIFFUSE, ArrayMultiply(textures[objects.Material].MaterialDiffuse, 0.2f));
                     Gl.glLightfv(Gl.GL_LIGHT3, Gl.GL_DIFFUSE, ArrayMultiply(textures[objects.Material].MaterialDiffuse, 0.2f));
+
+                    Gl.glBindTexture(Gl.GL_TEXTURE_2D, textures[objects.Material].TextureId);
                 }
 
-                if (objects.TPoly.Count > 0)
+                for (int j = 0; j < polyList[i].Count; j++)
                 {
-                    tx1 = (float)objects.TVertex[objects.TPoly[j][0] - k][0];
-                    ty1 = (float)objects.TVertex[objects.TPoly[j][0] - k][1];
-                    tx2 = (float)objects.TVertex[objects.TPoly[j][1] - k][0];
-                    ty2 = (float)objects.TVertex[objects.TPoly[j][1] - k][1];
-                    tx3 = (float)objects.TVertex[objects.TPoly[j][2] - k][0];
-                    ty3 = (float)objects.TVertex[objects.TPoly[j][2] - k][1];
 
-                    Gl.glTexCoord2f(tx1, ty1);
-                    Gl.glVertex3f(x1, y1, z1);
-                    Gl.glTexCoord2f(tx2, ty2);
-                    Gl.glVertex3f(x2, y2, z2);
-                    Gl.glTexCoord2f(tx3, ty3);
-                    Gl.glVertex3f(x3, y3, z3);
+                    double x1, y1, z1, x2, y2, z2, x3, y3, z3;
+                    double n1, n2, n3;
+                    double tx1, ty1, tx2, ty2, tx3, ty3;
+
+                    //добавляем в переменные для удобства записи/чтения
+                    x1 = objects.Vertex[objects.Poly[polyList[i][j]][0]][0];
+                    y1 = objects.Vertex[objects.Poly[polyList[i][j]][0]][1];
+                    z1 = objects.Vertex[objects.Poly[polyList[i][j]][0]][2];
+                    x2 = objects.Vertex[objects.Poly[polyList[i][j]][1]][0];
+                    y2 = objects.Vertex[objects.Poly[polyList[i][j]][1]][1];
+                    z2 = objects.Vertex[objects.Poly[polyList[i][j]][1]][2];
+                    x3 = objects.Vertex[objects.Poly[polyList[i][j]][2]][0];
+                    y3 = objects.Vertex[objects.Poly[polyList[i][j]][2]][1];
+                    z3 = objects.Vertex[objects.Poly[polyList[i][j]][2]][2];
+
+                    // рассчитываем нормаль 
+                    n1 = (y2 - y1) * (z3 - z1) - (y3 - y1) * (z2 - z1);
+                    n2 = (z2 - z1) * (x3 - x1) - (z3 - z1) * (x2 - x1);
+                    n3 = (x2 - x1) * (y3 - y1) - (x3 - x1) * (y2 - y1);
+
+                    Gl.glNormal3d(n1, n2, n3);      // устанавливаем нормаль
+
+                    if (objects.TPoly.Count > 0)
+                    {
+                        tx1 = objects.TVertex[objects.TPoly[polyList[i][j]][0]][0];
+                        ty1 = objects.TVertex[objects.TPoly[polyList[i][j]][0]][1];
+                        tx2 = objects.TVertex[objects.TPoly[polyList[i][j]][1]][0];
+                        ty2 = objects.TVertex[objects.TPoly[polyList[i][j]][1]][1];
+                        tx3 = objects.TVertex[objects.TPoly[polyList[i][j]][2]][0];
+                        ty3 = objects.TVertex[objects.TPoly[polyList[i][j]][2]][1];
+
+                        Gl.glTexCoord2d(tx1, ty1);
+                        Gl.glVertex3d(x1, y1, z1);
+                        Gl.glTexCoord2d(tx2, ty2);
+                        Gl.glVertex3d(x2, y2, z2);
+                        Gl.glTexCoord2d(tx3, ty3);
+                        Gl.glVertex3d(x3, y3, z3);
+                    }
+                    else
+                    {
+                        Gl.glVertex3d(x1, y1, z1);
+                        Gl.glVertex3d(x2, y2, z2);
+                        Gl.glVertex3d(x3, y3, z3);
+                    }
                 }
-                else {
-                    Gl.glVertex3f(x1, y1, z1);
-                    Gl.glVertex3f(x2, y2, z2);
-                    Gl.glVertex3f(x3, y3, z3);
-                }
-                Gl.glEnd();     // завершаем отрисовку
-            }
+
+                i++;
+
+            } while (i < subMaterials.Count);
+
+            Gl.glEnd();     // завершаем отрисовку
             Gl.glDisable(Gl.GL_NORMALIZE);
             Gl.glPopMatrix();
-
-            Gl.glLightfv(Gl.GL_LIGHT0, Gl.GL_DIFFUSE, new float[] { 1, 1, 1 });
 
             Gl.glEndList();     // завершаем дисплейный список
 
             return nom_l;
         }
-
+        //создание в памяти прямоугольника с заданными координатами
         public static void Rectangle(string name, double[] point1, double[] point2, double[] point3, double[] point4, List<double[]> tVertex = null, Texture texture = null) {
 
             List<Object3D> objects = new List<Object3D>();
@@ -432,7 +435,7 @@ namespace Курсовой_Проект
 
             Object3D obj = new Object3D(name, new List<double[]> { point1, point2, point3, point4 },
                                         new List<int[]> { new int[] { 0, 1, 3 }, new int[] { 1, 2, 3 } }, new List<int>(),
-                                        tVertex, tPoly, ".ase", 0, new double[] { 1.0, 1.0, 1.0});
+                                        tVertex, tPoly, 0, new double[] { 1.0, 1.0, 1.0});
 
             objects.Add(obj);
 
@@ -441,16 +444,12 @@ namespace Курсовой_Проект
 
         }
 
+        //отрисовка сцены
         public static void DrawScene() {
 
             Gl.glPushMatrix();
 
-            //растояние камеры
-            Gl.glTranslated(0, 0, Z);
-
-            //угол камеры
-            Gl.glRotated(angleX, 1, 0, 0);
-            Gl.glRotated(angleZ, 0, 0, 1);
+            Camera.Set();
 
             Gl.glRotated(angle, 0, 0, 1);
             Gl.glTranslated(translateVector.X, translateVector.Y, 0);
@@ -481,12 +480,12 @@ namespace Курсовой_Проект
                     }
 
                     //вращение колес
-                    if (i == 0 && (j == 37 || j == 36 || j == 35 || j == 34 || j == 28 || j == 29 || j == 31 || j == 32))
+                    if (i == 0 && (j == 25 || j == 26 || j == 28 || j == 29 || j == 27 || j == 34 || j == 35 || j == 36))
                     {
                         Gl.glTranslated(objectsInfo[i].Objects[j].Position[0], objectsInfo[i].Objects[j].Position[1], objectsInfo[i].Objects[j].Position[2]);
 
                         //поворот колес
-                        if (j == 36 || j == 35 || j == 29 || j == 32)
+                        if (j == 25 || j == 26 || j == 35 || j == 27)
                         {
                             Gl.glRotated(-AngleFrontWheel, 0, 0, 1);
                         }
@@ -500,79 +499,80 @@ namespace Курсовой_Проект
                     {
                         switch (j)
                         {
-                            case 30:
-                                Gl.glTranslated(objectsInfo[i].Objects[29].Position[0], objectsInfo[i].Objects[29].Position[1], objectsInfo[i].Objects[29].Position[2]);
+                            case 31:
+                                Gl.glTranslated(objectsInfo[i].Objects[35].Position[0], objectsInfo[i].Objects[35].Position[1], objectsInfo[i].Objects[35].Position[2]);
                                 Gl.glRotated(-AngleFrontWheel, 0, 0, 1);
-                                Gl.glTranslated(-objectsInfo[i].Objects[29].Position[0], -objectsInfo[i].Objects[29].Position[1], -objectsInfo[i].Objects[29].Position[2]);
+                                Gl.glTranslated(-objectsInfo[i].Objects[35].Position[0], -objectsInfo[i].Objects[35].Position[1], -objectsInfo[i].Objects[35].Position[2]);
                                 break;
-                            case 33:
-                                Gl.glTranslated(objectsInfo[i].Objects[32].Position[0], objectsInfo[i].Objects[32].Position[1], objectsInfo[i].Objects[32].Position[2]);
+                            case 30:
+                                Gl.glTranslated(objectsInfo[i].Objects[27].Position[0], objectsInfo[i].Objects[27].Position[1], objectsInfo[i].Objects[27].Position[2]);
                                 Gl.glRotated(-AngleFrontWheel, 0, 0, 1);
-                                Gl.glTranslated(-objectsInfo[i].Objects[32].Position[0], -objectsInfo[i].Objects[32].Position[1], -objectsInfo[i].Objects[32].Position[2]);
+                                Gl.glTranslated(-objectsInfo[i].Objects[27].Position[0], -objectsInfo[i].Objects[27].Position[1], -objectsInfo[i].Objects[27].Position[2]);
                                 break;
                             default:
                                 break;
                         }
                     }
 
+                    if (i == 0 && j == 19) {
+                        Gl.glTranslated(objectsInfo[i].Objects[j].Position[0], objectsInfo[i].Objects[j].Position[1] - 1.3, objectsInfo[i].Objects[j].Position[2]);
+                        Gl.glRotated(-23, 1, 0, 0);
+                        Gl.glRotated(angleHelm, 0, 1, 0);
+                        Gl.glRotated(23, 1, 0, 0);
+                        Gl.glTranslated(-objectsInfo[i].Objects[j].Position[0], -objectsInfo[i].Objects[j].Position[1] + 1.3, -objectsInfo[i].Objects[j].Position[2]);
+                    }
+
                     Gl.glTranslated(objectsInfo[i].Objects[j].Translate[0], objectsInfo[i].Objects[j].Translate[1], objectsInfo[i].Objects[j].Translate[2]);
 
-                    if (objectsInfo[i].Textures.Count > 0)
+                    if (!(i == 0 && (j == 18 || j == 37 || j == 38) && Camera.cameraPosition == 1))
                     {
-                        if (objectsInfo[i].Textures[objectsInfo[i].Objects[j].Material].MaterialClass != "Standard")
-                        {
-                            Gl.glBindTexture(Gl.GL_TEXTURE_2D, objectsInfo[i].Textures[objectsInfo[i].Objects[j].Material].SubMaterial[0].TextureId);
-                            Gl.glEnable(Gl.GL_TEXTURE_2D);
-                        }
-                        else
-                        {
-                            Gl.glBindTexture(Gl.GL_TEXTURE_2D, objectsInfo[i].Textures[objectsInfo[i].Objects[j].Material].TextureId);
-                            Gl.glEnable(Gl.GL_TEXTURE_2D);
-                        }
-
-                        Gl.glCallList(obj);
-
-                        Gl.glBindTexture(Gl.GL_TEXTURE_2D, 0);
-                        Gl.glDisable(Gl.GL_TEXTURE_2D);
-                    }
-                    else {
+                        //отрисовка дисплейного списка
                         Gl.glCallList(obj);
                     }
 
                     Gl.glTranslated(-objectsInfo[i].Objects[j].Translate[0], -objectsInfo[i].Objects[j].Translate[1], -objectsInfo[i].Objects[j].Translate[2]);
 
-                    if (i == 0 && (j == 37 || j == 36 || j == 35 || j == 34 || j == 28 || j == 29 || j == 31 || j == 32))
+                    //вращение колес
+                    if (i == 0 && (j == 25 || j == 26 || j == 28 || j == 29 || j == 27 || j == 34 || j == 35 || j == 36))
                     {
                         Gl.glTranslated(objectsInfo[i].Objects[j].Position[0], objectsInfo[i].Objects[j].Position[1], objectsInfo[i].Objects[j].Position[2]);
 
                         Gl.glRotated(AngleWheel, 1, 0, 0);
 
                         //поворот колес
-                        if (j == 36 || j == 35 || j == 29 || j == 32)
+                        if (j == 25 || j == 26 || j == 35 || j == 27)
                         {
                             Gl.glRotated(AngleFrontWheel, 0, 0, 1);
                         }
                        
                         Gl.glTranslated(-objectsInfo[i].Objects[j].Position[0], -objectsInfo[i].Objects[j].Position[1], -objectsInfo[i].Objects[j].Position[2]);
                     }
-
                     //поворот тормозных колодок при повороте передних колес
                     if (i == 0)
                     {
                         switch (j) {
-                            case 30:
-                                Gl.glTranslated(objectsInfo[i].Objects[29].Position[0], objectsInfo[i].Objects[29].Position[1], objectsInfo[i].Objects[29].Position[2]);
+                            case 31:
+                                Gl.glTranslated(objectsInfo[i].Objects[35].Position[0], objectsInfo[i].Objects[35].Position[1], objectsInfo[i].Objects[35].Position[2]);
                                 Gl.glRotated(AngleFrontWheel, 0, 0, 1);
-                                Gl.glTranslated(-objectsInfo[i].Objects[29].Position[0], -objectsInfo[i].Objects[29].Position[1], -objectsInfo[i].Objects[29].Position[2]);
+                                Gl.glTranslated(-objectsInfo[i].Objects[35].Position[0], -objectsInfo[i].Objects[35].Position[1], -objectsInfo[i].Objects[35].Position[2]);
                                 break;
-                            case 33:
-                                Gl.glTranslated(objectsInfo[i].Objects[32].Position[0], objectsInfo[i].Objects[32].Position[1], objectsInfo[i].Objects[32].Position[2]);
+                            case 30:
+                                Gl.glTranslated(objectsInfo[i].Objects[27].Position[0], objectsInfo[i].Objects[27].Position[1], objectsInfo[i].Objects[27].Position[2]);
                                 Gl.glRotated(AngleFrontWheel, 0, 0, 1);
-                                Gl.glTranslated(-objectsInfo[i].Objects[32].Position[0], -objectsInfo[i].Objects[32].Position[1], -objectsInfo[i].Objects[32].Position[2]);
+                                Gl.glTranslated(-objectsInfo[i].Objects[27].Position[0], -objectsInfo[i].Objects[27].Position[1], -objectsInfo[i].Objects[27].Position[2]);
                                 break;
                             default:
                                 break;
                         }
+                    }
+
+                    if (i == 0 && j == 19)
+                    {
+                        Gl.glTranslated(objectsInfo[i].Objects[j].Position[0], objectsInfo[i].Objects[j].Position[1] - 1.3, objectsInfo[i].Objects[j].Position[2]);
+                        Gl.glRotated(-23, 1, 0, 0);
+                        Gl.glRotated(-angleHelm, 0, 1, 0);
+                        Gl.glRotated(23, 1, 0, 0);
+                        Gl.glTranslated(-objectsInfo[i].Objects[j].Position[0], -objectsInfo[i].Objects[j].Position[1] + 1.3, -objectsInfo[i].Objects[j].Position[2]);
                     }
 
                     //вернуть перемещение
@@ -614,16 +614,15 @@ namespace Курсовой_Проект
             }
         }
 
+        #region Воспомогательные ф-ции
         private static string GetFirstWord(string str) {
             return str.Split(new char[] { ' ', '\t'})[0];
         }
-
         private static int CountWords(string s, string s0)
         {
             int count = (s.Length - s.Replace(s0, "").Length) / s0.Length;
             return count;
         }
-
         private static float[] ArrayMultiply(float[] arr, float k) {
 
             float[] bufArr = new float[arr.Length];
@@ -634,5 +633,6 @@ namespace Курсовой_Проект
 
             return bufArr;
         }
+        #endregion
     }
 }
